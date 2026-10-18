@@ -4,8 +4,8 @@
 # Safe to run again: it updates the code and keeps an existing .env.
 set -e
 
-echo "== Installing Python + git (takes a few minutes the first time)"
-pkg install -y python git
+echo "== Installing Python, git and termux-api (takes a few minutes the first time)"
+pkg install -y python git termux-api
 
 cd "$HOME"
 if [ -d RescueNet/.git ]; then
@@ -26,9 +26,6 @@ if [ ! -f .env ]; then
 BEACON_ID=beacon-android-01
 HQ_URL=https://rescuenet-r90o.onrender.com
 SYNC_INTERVAL=5
-# Fixed demo location (USC). termux-location is used instead if Termux:API is installed.
-BEACON_LAT=34.0205
-BEACON_LON=-118.2856
 EOF
 fi
 
@@ -40,6 +37,9 @@ python beacon/app.py
 EOF
 chmod +x "$HOME/start-beacon.sh"
 
+echo
+echo "== Testing GPS (Termux:API). If this hangs or errors, check the Termux:API app + location permission."
+timeout 30 termux-location -p network -r last || echo "   (no location yet - see docs/android-termux-setup.md step 3)"
 echo
 echo "Done. Start the beacon any time with:   ~/start-beacon.sh"
 echo "Then open http://127.0.0.1:8080 in Chrome on this phone to check it."

@@ -261,17 +261,25 @@ class Beacon:
         """Beacon GPS via Termux:API. iOS Safari blocks GPS on http, so the
         beacon's own fix (victim is within Wi-Fi range) is our location."""
         if not shutil.which("termux-location"):
+            if self.lat is None:
+                print("[gps] termux-location not found: install the Termux:API app + `pkg install termux-api`", flush=True)
             return
-        for provider in ("gps", "network"):
+        # Last-known first (instant, so early SOS get a location), then a fresh fix.
+        for provider, request in (("network", "last"), ("gps", "once"), ("network", "once")):
             try:
-                out = subprocess.run(["termux-location", "-p", provider, "-r", "once"],
+                out = subprocess.run(["termux-location", "-p", provider, "-r", request],
                                      capture_output=True, text=True, timeout=45).stdout
                 fix = json.loads(out)
                 self.lat, self.lon = round(fix["latitude"], 6), round(fix["longitude"], 6)
-                self.gps_source = "termux-" + provider
-                return
+                self.gps_source = "termux-%s-%s" % (provider, request)
+                print("[gps] %s,%s via %s (±%sm)" % (self.lat, self.lon, self.gps_source,
+                                                     round(fix.get("accuracy") or 0)), flush=True)
+                if request == "once":
+                    return
             except (subprocess.SubprocessError, ValueError, KeyError, TypeError):
                 continue
+        if self.lat is None:
+            print("[gps] no location yet: give Termux:API location permission and turn on Location", flush=True)
 
 
 def _clamp_int(value, lo, hi, default):
