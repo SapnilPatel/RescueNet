@@ -115,22 +115,6 @@ The SOS page runs **on the beacon phone itself** (it has to work with no interne
 
 ---
 
-## 📈 Does it scale?
-
-We simulated a **16 km² dead zone** with **300 trapped people** over **60 minutes** (2,000 people/km², 80 m phone range).
-
-<p align="center"><img src="sim/out/delivery_vs_adoption.png" alt="Chart of SOS delivery rate versus share of phones carrying RescueNet, for phones only, plus LoRa beacons, and plus evacuating cars" width="720"></p>
-
-| Phones carrying RescueNet | Phones only | + LoRa beacons | + evacuating cars |
-|:---:|:---:|:---:|:---:|
-| 2% | 1.3% | 3.9% | **66.5%** |
-| 5% | 5.9% | 11.6% | **91.1%** |
-| 10% | 58.4% | 69.3% | **98.5%** |
-
-**With 5% of phones carrying RescueNet and cars carrying messages out, about 9 in 10 SOS reach responders within an hour, and victims install nothing.** Reproduce it with `python sim/simulate.py --seeds 5`.
-
----
-
 ## 🧩 Two lives, one tool
 
 | Every day | In a crisis |
@@ -152,7 +136,6 @@ rescuenet/
 │   ├── triage.py        Rule-based severity scoring
 │   ├── retell.py        Voice-call integration (coded, switched off)
 │   └── static/          Dashboard + bundled Leaflet
-├── sim/simulate.py      Delivery-vs-adoption simulation
 ├── tests/test_e2e.py    9 end-to-end tests against a real HQ server
 └── docs/                Concept, research, runbooks, poster
 ```
@@ -163,7 +146,6 @@ rescuenet/
 | SOS page | Vanilla HTML / CSS / JavaScript (zero dependencies) |
 | HQ | Python · FastAPI · Pydantic · SQLite · Uvicorn · Render |
 | Dashboard | JavaScript · Leaflet.js · OpenStreetMap |
-| Simulation | NumPy · SciPy · Matplotlib |
 
 <details>
 <summary><b>API reference</b></summary>
