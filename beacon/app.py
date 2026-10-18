@@ -11,7 +11,7 @@ We never tell the victim "delivered" before HQ has acked.
 
 Config (env vars):
   BEACON_ID        beacon-android-01
-  HQ_URL           https://rescuenet-hq.onrender.com   (no trailing slash)
+  HQ_URL           https://rescuenet-r90o.onrender.com   (no trailing slash)
   BEACON_KEY       optional shared secret sent as X-Beacon-Key
   PORT             8080
   BEACON_DB        beacon/beacon.db

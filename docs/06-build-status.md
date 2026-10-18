@@ -14,6 +14,7 @@
 - Not live-tested (no keys on the build machine): the real Claude API call and the real Retell call. Test both with keys before the demo.
 
 ## Deployment
+- **Live HQ: https://rescuenet-r90o.onrender.com**, deployed Sat Oct 17 ~5:24 PM PT. A real beacon → live HQ test passed (saved on beacon → delivered → CRITICAL on the map). Claude and Retell are not configured on Render yet.
 - HQ → **Render** free tier via `render.yaml` (sleeps after ~15 min idle; SQLite resets on deploy). Backup: laptop + ngrok. See `render-deploy.md`.
 - Beacon → Android via Termux (`git clone`, `python beacon/app.py`). See `android-termux-setup.md`.
 - Secrets only in Render env vars / local `.env` (never committed).

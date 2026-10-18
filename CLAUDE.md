@@ -25,7 +25,8 @@ Team RescueNet, **Dual-Use Hackathon @ USC Viterbi** (LA Tech Week, Oct 16–18,
 - Deploy: HQ on Render free tier (`render.yaml`), backup laptop + ngrok. Beacon: `git clone` + `python beacon/app.py` in Termux.
 
 ## Code status
-Rebuilt Sat Oct 17 2026 (evening) after the original commit `11f630c` was lost. Run `python -m pytest` before pushing.
+- Live HQ (Render free tier, auto-deploys from `main`): https://rescuenet-r90o.onrender.com
+- Rebuilt Sat Oct 17 2026 (evening) after the original commit `11f630c` was lost. Run `python -m pytest` before pushing.
 
 ## Knowledge base (`docs/`)
 | File | Contents |

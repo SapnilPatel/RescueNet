@@ -35,6 +35,8 @@ python -m pytest                                       # 8 end-to-end tests
 Everything works without API keys: triage falls back to rules, and the dashboard shows Retell as off.
 
 ## Deploy
+**Live HQ dashboard:** https://rescuenet-r90o.onrender.com
+
 - **HQ → Render:** see [docs/render-deploy.md](docs/render-deploy.md). Backup: laptop + `ngrok http 8000`.
 - **Beacon → Android:** see [docs/android-termux-setup.md](docs/android-termux-setup.md).
 - **Retell agent:** see [docs/retell-agent-prompt.md](docs/retell-agent-prompt.md).

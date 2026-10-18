@@ -15,7 +15,7 @@ termux-location -p network -r once     # grant location permission when prompted
 ```bash
 cat > .env <<'EOF'
 BEACON_ID=beacon-android-01
-HQ_URL=https://rescuenet-hq.onrender.com
+HQ_URL=https://rescuenet-r90o.onrender.com
 BEACON_KEY=<same value as on Render, or leave empty>
 SYNC_INTERVAL=5
 EOF
