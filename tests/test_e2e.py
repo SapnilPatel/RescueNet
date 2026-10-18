@@ -13,12 +13,24 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "beacon"))
 
-for k in ("ANTHROPIC_API_KEY", "RETELL_API_KEY", "BEACON_KEY", "DISPATCH_TOKEN"):
+# Never read the real .env (it holds the Retell key) and never call paid APIs from tests.
+os.environ["RESCUENET_NO_DOTENV"] = "1"
+for k in ("ANTHROPIC_API_KEY", "RETELL_API_KEY", "RETELL_FROM_NUMBER", "RETELL_TO_NUMBER", "RETELL_AGENT_ID",
+          "BEACON_KEY", "DISPATCH_TOKEN"):
     os.environ.pop(k, None)
 os.environ["HQ_DB"] = ":memory:"  # module-level app; tests use their own DBs below
 
 import app as beacon_app  # noqa: E402
-from hq import main as hq_main, triage  # noqa: E402
+from hq import main as hq_main, retell, triage  # noqa: E402
+
+assert not os.environ.get("RETELL_API_KEY"), "tests must not see a real Retell key"
+
+
+@pytest.fixture(autouse=True)
+def no_real_retell(monkeypatch):
+    def blocked(*a, **kw):
+        raise AssertionError("a test tried to make a real Retell HTTP request")
+    monkeypatch.setattr(retell.httpx, "post", blocked)
 
 
 def free_port():
@@ -219,3 +231,34 @@ def test_tokens_enforced(monkeypatch, tmp_path):
     assert client.post("/api/v1/incidents", json=body, headers={"X-Beacon-Key": "k1"}).json()["ack"]
     assert client.post("/api/v1/incidents/cccccccc-0000/close").status_code == 401
     assert client.post("/api/v1/incidents/cccccccc-0000/close", headers={"X-Dispatch-Token": "d1"}).status_code == 200
+
+
+def test_calls_off_by_default(monkeypatch, tmp_path):
+    """Retell credit is scarce: no auto-call and no manual call until switched on."""
+    from fastapi.testclient import TestClient
+    from hq import retell
+
+    placed = []
+    monkeypatch.setattr(retell, "configured", lambda: True)
+    monkeypatch.setattr(retell, "place_call", lambda inc, to=None: placed.append(inc["short_code"]) or {"ok": True, "call_id": "c1"})
+    monkeypatch.setenv("AUTO_CALL", "critical")
+    monkeypatch.setenv("AUTO_CALL_COOLDOWN_S", "0")
+    client = TestClient(hq_main.create_app(str(tmp_path / "z.db")))
+    sos = {"short_code": "GH78", "beacon_id": "b", "status": "trapped", "injured": 1, "landmark": "x", "created_at": 1}
+
+    assert client.get("/api/v1/config").json()["calls_on"] is False
+    client.post("/api/v1/incidents", json=dict(sos, message_id="dddddddd-0001"))
+    assert placed == []
+    assert client.get("/api/v1/incidents").json()["incidents"][0]["call_status"] == "not called (calls switched off)"
+    assert client.post("/api/v1/incidents/dddddddd-0001/call", json={}).status_code == 409
+    assert placed == []
+
+    assert client.post("/api/v1/calls", json={"enabled": True, "minutes": 5}).json()["calls_on"] is True
+    client.post("/api/v1/incidents", json=dict(sos, message_id="dddddddd-0002", short_code="JK90"))
+    assert placed == ["JK90"]
+    assert client.post("/api/v1/incidents/dddddddd-0001/call", json={}).status_code == 200
+    assert placed == ["JK90", "GH78"]
+
+    client.post("/api/v1/calls", json={"enabled": False})
+    assert client.get("/api/v1/config").json()["calls_on"] is False
+    assert client.post("/api/v1/incidents/dddddddd-0001/call", json={}).status_code == 409

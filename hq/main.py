@@ -29,7 +29,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(message)s
 
 def _load_dotenv():
     path = os.path.join(HERE, "..", ".env")
-    if os.path.exists(path):
+    if os.environ.get("RESCUENET_NO_DOTENV") != "1" and os.path.exists(path):
         for line in open(path, encoding="utf-8"):
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
@@ -80,6 +80,11 @@ class AssignIn(BaseModel):
 
 class CallIn(BaseModel):
     to: str = "dispatcher"  # "dispatcher" | "callback" | an E.164 number
+
+
+class CallSwitchIn(BaseModel):
+    enabled: bool
+    minutes: int = Field(default=15, ge=1, le=120)
 
 
 JSON_COLS = ("needs", "hops")
@@ -164,6 +169,12 @@ def create_app(db_path=None):
     app = FastAPI(title="RescueNet HQ")
     app.state.store = store
     last_auto_call = {"at": 0.0}
+    # Retell credit is scarce: calls are OFF until a dispatcher switches them on,
+    # switch themselves off again after a few minutes, and reset to OFF on restart.
+    call_switch = {"until": 0.0}
+
+    def calls_on():
+        return time.time() < call_switch["until"]
 
     def check_beacon(key):
         expected = os.environ.get("BEACON_KEY")
@@ -200,6 +211,9 @@ def create_app(db_path=None):
         threshold = {"critical": ["critical"], "high": ["critical", "high"]}.get(auto, [])
         cooldown = float(os.environ.get("AUTO_CALL_COOLDOWN_S", "60"))
         if inc["severity"] in threshold and retell.configured() and not inc.get("call_status"):
+            if not calls_on():
+                store.update(message_id, call_status="not called (calls switched off)")
+                return
             if time.time() - last_auto_call["at"] >= cooldown:
                 last_auto_call["at"] = time.time()
                 do_call(inc)
@@ -287,6 +301,8 @@ def create_app(db_path=None):
         inc = store.get(message_id)
         if not inc:
             raise HTTPException(404, "incident not found")
+        if not calls_on():
+            raise HTTPException(409, "Retell calls are switched off. Turn them on in the dashboard header first.")
         to = None
         if body.to == "callback":
             if not inc.get("callback"):
@@ -299,9 +315,18 @@ def create_app(db_path=None):
             raise HTTPException(502, res["error"])
         return res
 
+    @app.post("/api/v1/calls")
+    def switch_calls(body: CallSwitchIn, x_dispatch_token: Optional[str] = Header(None)):
+        check_dispatch(x_dispatch_token)
+        call_switch["until"] = time.time() + body.minutes * 60 if body.enabled else 0.0
+        log.info("Retell calls switched %s", "ON for %d min" % body.minutes if body.enabled else "OFF")
+        return {"calls_on": calls_on(), "calls_until": int(call_switch["until"])}
+
     @app.get("/api/v1/config")
     def config():
         return {
+            "calls_on": calls_on(),
+            "calls_seconds_left": max(0, int(call_switch["until"] - time.time())),
             "claude_enabled": bool(os.environ.get("ANTHROPIC_API_KEY")),
             "retell_enabled": retell.configured() and bool(os.environ.get("RETELL_TO_NUMBER")),
             "auto_call": os.environ.get("AUTO_CALL", "critical"),

@@ -24,13 +24,43 @@
     config = c;
     if (!fitted) map.setView(c.map_center, 15);
     var flags = document.getElementById("flags");
-    [[c.claude_enabled ? "Rules + Claude triage" : "Rule triage", true], ["Retell calls", c.retell_enabled], ["Auto-call: " + c.auto_call, c.retell_enabled && c.auto_call !== "off"]]
+    [[c.claude_enabled ? "Rules + Claude triage" : "Rule triage", true],
+     [c.retell_enabled ? "Retell configured" : "Retell not configured", c.retell_enabled],
+     ["Auto-call when ON: " + c.auto_call, c.retell_enabled && c.auto_call !== "off"]]
       .forEach(function (f) { flags.appendChild(el("span", "flag" + (f[1] ? " on" : ""), f[0])); });
+    renderCallSwitch(c);
     if (c.dispatch_token_required && !token) {
       token = prompt("Dispatcher token") || "";
       safeSet("rn_token", token);
     }
   });
+
+  // Retell credit is limited: calls stay OFF unless switched on here, and HQ
+  // turns them off again by itself after the chosen minutes.
+  var callSwitch = document.getElementById("callSwitch");
+  function renderCallSwitch(c) {
+    config.calls_on = c.calls_on;
+    callSwitch.classList.toggle("on", !!c.calls_on);
+    callSwitch.textContent = c.calls_on
+      ? "Retell calls: ON · " + Math.ceil(c.calls_seconds_left / 60) + " min left (click to turn off)"
+      : "Retell calls: OFF";
+  }
+  callSwitch.onclick = function () {
+    var turnOn = !config.calls_on, minutes = 15;
+    if (turnOn) {
+      var m = prompt("Turn Retell calls ON? Each call uses paid credit.\nCritical SOS will auto-call while ON.\n\nMinutes to stay on:", "15");
+      if (m === null) return;
+      minutes = Math.max(1, Math.min(120, parseInt(m, 10) || 15));
+    }
+    fetch("/api/v1/calls", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Dispatch-Token": token },
+      body: JSON.stringify({ enabled: turnOn, minutes: minutes })
+    }).then(function (r) { return r.json(); }).then(function () { return refreshConfig(); });
+  };
+  function refreshConfig() {
+    return fetch("/api/v1/config").then(function (r) { return r.json(); }).then(renderCallSwitch).catch(function () {});
+  }
 
   function act(id, action, body) {
     return fetch("/api/v1/incidents/" + encodeURIComponent(id) + "/" + action, {
@@ -93,7 +123,7 @@
     if (inc.call_status) c.appendChild(el("div", "meta", "Call: " + inc.call_status));
 
     var b = el("div", "btns");
-    function btn(label, fn, cls) { var x = el("button", cls || "", label); x.onclick = fn; b.appendChild(x); }
+    function btn(label, fn, cls) { var x = el("button", cls || "", label); x.onclick = fn; b.appendChild(x); return x; }
     if (inc.dispatch_status === "new") btn("Acknowledge", function () { act(inc.message_id, "ack"); });
     if (inc.dispatch_status !== "closed") {
       btn("Assign team + ETA", function () {
@@ -103,8 +133,9 @@
         dlg.showModal();
       }, "primary");
       btn("Rescued / Close", function () { if (confirm("Mark " + inc.short_code + " rescued/closed?")) act(inc.message_id, "close"); });
-      btn("Call dispatcher", function () { act(inc.message_id, "call", { to: "dispatcher" }); });
-      if (inc.callback) btn("Call victim", function () { act(inc.message_id, "call", { to: "callback" }); });
+      var off = !config.calls_on;
+      btn("Call dispatcher", function () { act(inc.message_id, "call", { to: "dispatcher" }); }).disabled = off;
+      if (inc.callback) btn("Call victim", function () { act(inc.message_id, "call", { to: "callback" }); }).disabled = off;
     }
     c.appendChild(b);
     return c;
@@ -166,5 +197,5 @@
 
   document.getElementById("showClosed").onchange = refresh;
   refresh();
-  setInterval(function () { if (!dlg.open) refresh(); }, 3000);
+  setInterval(function () { if (!dlg.open) refreshConfig().then(refresh); }, 3000);
 })();
