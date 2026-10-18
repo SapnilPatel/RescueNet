@@ -1,0 +1,3 @@
+-r requirements.txt
+-r beacon/requirements.txt
+pytest>=8

@@ -1,0 +1,5 @@
+# HQ (Render installs this)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+httpx>=0.27
+anthropic>=1.15

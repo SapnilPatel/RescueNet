@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SOS-HELP</title>
+<style>
+  :root{--bg:#fff;--fg:#111;--muted:#555;--line:#ddd;--red:#c62828;--amber:#b26a00;--blue:#1565c0;--green:#2e7d32;--card:#f6f6f6}
+  @media (prefers-color-scheme:dark){:root{--bg:#111;--fg:#f2f2f2;--muted:#aaa;--line:#333;--card:#1c1c1c}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.4 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
+  main{max-width:520px;margin:0 auto;padding:16px}
+  h1{font-size:26px;margin:4px 0 2px;color:var(--red)}
+  .sub{color:var(--muted);margin:0 0 14px;font-size:15px}
+  fieldset{border:0;padding:0;margin:0 0 16px;min-width:0}
+  .row>div{min-width:0}
+  legend{font-weight:700;margin-bottom:8px}
+  .status{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .status label{display:block;border:2px solid var(--line);border-radius:12px;padding:14px 10px;text-align:center;font-weight:700;font-size:18px;cursor:pointer;user-select:none}
+  .status input{position:absolute;opacity:0;pointer-events:none}
+  /* .on is set from JS so older Android browsers without :has() still highlight */
+  .status label.on{color:#fff}
+  .s-trapped.on{background:var(--red);border-color:var(--red)}
+  .s-injured.on{background:var(--amber);border-color:var(--amber)}
+  .s-evacuate.on{background:var(--blue);border-color:var(--blue)}
+  .s-safe.on{background:var(--green);border-color:var(--green)}
+  .row{display:flex;gap:12px}
+  .row>div{flex:1}
+  label.f{display:block;font-weight:700;margin-bottom:6px}
+  input[type=number],input[type=text],input[type=tel],textarea{width:100%;font:inherit;padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--fg)}
+  textarea{min-height:70px;resize:vertical}
+  .needs{display:flex;flex-wrap:wrap;gap:8px}
+  .needs label{border:2px solid var(--line);border-radius:999px;padding:8px 14px;cursor:pointer}
+  .needs label.on{border-color:var(--fg);font-weight:700}
+  .needs input{margin-right:6px}
+  details{margin:0 0 16px}
+  summary{cursor:pointer;font-weight:700}
+  button{width:100%;font:inherit;font-weight:800;font-size:20px;padding:16px;border:0;border-radius:12px;background:var(--red);color:#fff;cursor:pointer}
+  button:disabled{opacity:.6}
+  .err{color:var(--red);font-weight:700;min-height:1.4em;margin:8px 0}
+  .mine{margin-top:22px}
+  .card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:10px;border-left:6px solid var(--line)}
+  .card.st1{border-left-color:var(--amber)}
+  .card.st2{border-left-color:var(--blue)}
+  .card.st3{border-left-color:var(--green)}
+  .card.st4{border-left-color:var(--muted)}
+  .code{font-size:28px;font-weight:800;letter-spacing:3px}
+  .steps{display:flex;gap:4px;margin:8px 0}
+  .steps i{flex:1;height:6px;border-radius:3px;background:var(--line)}
+  .steps i.on{background:var(--green)}
+  .muted{color:var(--muted);font-size:14px}
+  .lang{float:right;font-size:14px;background:none;color:var(--blue);width:auto;padding:4px;font-weight:600}
+</style>
+</head>
+<body>
+<main>
+  <button class="lang" id="lang" type="button">Español</button>
+  <h1 data-t="title">SOS — Send for help</h1>
+  <p class="sub" data-t="sub">This works with no internet. Your message is saved on this beacon and carried to rescuers.</p>
+
+  <form id="f" novalidate>
+    <fieldset>
+      <legend data-t="q_status">What is happening?</legend>
+      <div class="status">
+        <label class="s-trapped"><input type="radio" name="status" value="trapped"><span data-t="trapped">Trapped</span></label>
+        <label class="s-injured"><input type="radio" name="status" value="injured"><span data-t="injured">Injured</span></label>
+        <label class="s-evacuate"><input type="radio" name="status" value="evacuate"><span data-t="evacuate">Need evacuation</span></label>
+        <label class="s-safe"><input type="radio" name="status" value="safe"><span data-t="safe">I'm safe</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <label class="f" for="landmark" data-t="q_where">Where exactly are you? (required)</label>
+      <textarea id="landmark" name="landmark" maxlength="200" data-tp="ph_where" placeholder="e.g. 2nd floor, blue house, 123 Oak St, back bedroom"></textarea>
+    </fieldset>
+
+    <fieldset class="row">
+      <div><label class="f" for="people" data-t="q_people">People with you</label><input id="people" name="people" type="number" min="1" max="99" value="1" inputmode="numeric"></div>
+      <div><label class="f" for="injured" data-t="q_injured">Injured</label><input id="injured" name="injured" type="number" min="0" max="99" value="0" inputmode="numeric"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend data-t="q_needs">Special needs</legend>
+      <div class="needs">
+        <label><input type="checkbox" name="needs" value="child"><span data-t="child">Child</span></label>
+        <label><input type="checkbox" name="needs" value="elderly"><span data-t="elderly">Elderly</span></label>
+        <label><input type="checkbox" name="needs" value="oxygen"><span data-t="oxygen">Oxygen / medical device</span></label>
+        <label><input type="checkbox" name="needs" value="wheelchair"><span data-t="wheelchair">Wheelchair</span></label>
+        <label><input type="checkbox" name="needs" value="pet"><span data-t="pet">Pet</span></label>
+      </div>
+    </fieldset>
+
+    <details>
+      <summary data-t="more">More details (optional)</summary>
+      <p><label class="f" for="note" data-t="q_note">Short note</label><input id="note" name="note" type="text" maxlength="100"></p>
+      <p><label class="f" for="name" data-t="q_name">Your name</label><input id="name" name="name" type="text" maxlength="60" autocomplete="name"></p>
+      <p><label class="f" for="callback" data-t="q_callback">Phone number to call back</label><input id="callback" name="callback" type="tel" maxlength="20" autocomplete="tel"></p>
+    </details>
+
+    <div class="err" id="err" role="alert"></div>
+    <button id="send" type="submit" data-t="send">SEND SOS</button>
+  </form>
+
+  <section class="mine" id="mine" hidden>
+    <h2 data-t="your_sos">Your SOS</h2>
+    <div id="cards"></div>
+    <p class="muted" data-t="leave">Your SOS is saved on the beacon. You can leave this Wi-Fi. Reopen this page later to see if help is coming.</p>
+  </section>
+  <p class="muted">Beacon {{BEACON_ID}}</p>
+</main>
+<script>
+(function(){
+  var T = {
+    es: {title:"SOS — Pedir ayuda", sub:"Funciona sin internet. Tu mensaje se guarda en esta baliza y se lleva a los rescatistas.",
+      q_status:"¿Qué está pasando?", trapped:"Atrapado", injured:"Herido", evacuate:"Necesito evacuar", safe:"Estoy a salvo",
+      q_where:"¿Dónde estás exactamente? (obligatorio)", ph_where:"ej. 2º piso, casa azul, 123 Oak St, cuarto de atrás",
+      q_people:"Personas contigo", q_injured:"Heridos", q_needs:"Necesidades especiales", child:"Niño", elderly:"Adulto mayor",
+      oxygen:"Oxígeno / equipo médico", wheelchair:"Silla de ruedas", pet:"Mascota", more:"Más detalles (opcional)",
+      q_note:"Nota corta", q_name:"Tu nombre", q_callback:"Teléfono para devolver la llamada", send:"ENVIAR SOS",
+      your_sos:"Tu SOS", leave:"Tu SOS está guardado en la baliza. Puedes salir de este Wi-Fi. Vuelve a abrir esta página para ver si viene ayuda.",
+      code:"Tu código", e_status:"Elige qué está pasando.", e_where:"Escribe dónde estás.", e_net:"No se pudo guardar. Acércate a la baliza y vuelve a intentar."},
+    en: {code:"Your code", e_status:"Choose what is happening.", e_where:"Tell responders where you are.", e_net:"Could not save. Move closer to the beacon and try again."}
+  };
+  var EN = {};
+  var lang = "en";
+  document.querySelectorAll("[data-t]").forEach(function(el){ EN[el.getAttribute("data-t")] = el.textContent; });
+  document.querySelectorAll("[data-tp]").forEach(function(el){ EN[el.getAttribute("data-tp")] = el.placeholder; });
+  function t(k){ return (lang === "es" ? T.es[k] : (T.en[k] || EN[k])) || EN[k] || k; }
+  function applyLang(){
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-t]").forEach(function(el){ el.textContent = t(el.getAttribute("data-t")); });
+    document.querySelectorAll("[data-tp]").forEach(function(el){ el.placeholder = t(el.getAttribute("data-tp")); });
+    document.getElementById("lang").textContent = lang === "es" ? "English" : "Español";
+    render(lastStatuses);
+  }
+  document.getElementById("lang").onclick = function(){ lang = lang === "es" ? "en" : "es"; store("rn_lang", lang); applyLang(); };
+
+  function load(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function store(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+  function myCodes(){ try { return JSON.parse(load("rn_codes") || "[]"); } catch(e){ return []; } }
+  // crypto.randomUUID needs a secure context; plain http on a hotspot is not one.
+  function uuid(){ return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c){ var r = Math.random()*16|0; return (c === "x" ? r : (r&3|8)).toString(16); }); }
+
+  var form = document.getElementById("f"), err = document.getElementById("err"), btn = document.getElementById("send");
+  var pendingId = null, lastStatuses = [];
+
+  function syncOn(){ form.querySelectorAll("label").forEach(function(l){ var i = l.querySelector("input"); if (i) l.classList.toggle("on", i.checked); }); }
+  form.addEventListener("change", syncOn);
+  form.addEventListener("reset", function(){ setTimeout(syncOn, 0); });
+
+  form.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    err.textContent = "";
+    var fd = new FormData(form), data = {};
+    fd.forEach(function(v,k){ if (k !== "needs") data[k] = v; });
+    data.needs = fd.getAll("needs");
+    if (!data.status) { err.textContent = t("e_status"); return; }
+    if (!String(data.landmark || "").trim()) { err.textContent = t("e_where"); document.getElementById("landmark").focus(); return; }
+    pendingId = pendingId || uuid();  // same id on retry = no duplicate SOS
+    data.message_id = pendingId;
+    btn.disabled = true;
+    fetch("/api/sos", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(data)})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(res){
+        btn.disabled = false;
+        if (!res.ok) { err.textContent = res.j.error || t("e_net"); return; }
+        pendingId = null;
+        var codes = myCodes();
+        if (codes.indexOf(res.j.short_code) < 0) codes.unshift(res.j.short_code);
+        store("rn_codes", JSON.stringify(codes.slice(0,10)));
+        form.reset();
+        refresh();
+        document.getElementById("mine").scrollIntoView({behavior:"smooth"});
+      })
+      .catch(function(){ btn.disabled = false; err.textContent = t("e_net"); });
+  });
+
+  function esText(s){
+    if (s.stage === 4) return "Marcado como rescatado / cerrado.";
+    if (s.stage === 3) return "La ayuda viene en camino: " + (s.team || "equipo de rescate") + (s.eta_min != null ? " · llega en " + s.eta_min + " min" : "");
+    if (s.stage === 2) return s.dispatch_status === "acknowledged" ? "Un despachador vio tu SOS." : "Entregado a la central. Esperando que asignen un equipo.";
+    return "Guardado en la baliza — aún no entregado. Se enviará cuando la baliza tenga señal.";
+  }
+
+  function render(list){
+    var box = document.getElementById("cards");
+    if (!list.length) { document.getElementById("mine").hidden = true; return; }
+    document.getElementById("mine").hidden = false;
+    box.innerHTML = "";
+    list.forEach(function(s){
+      var d = document.createElement("div");
+      d.className = "card st" + s.stage;
+      var steps = "";
+      for (var i = 1; i <= 4; i++) steps += "<i class='" + (i <= s.stage ? "on" : "") + "'></i>";
+      d.innerHTML = "<div class='muted'>" + t("code") + "</div><div class='code'></div><div class='steps'>" + steps + "</div><div class='txt'></div>";
+      d.querySelector(".code").textContent = s.short_code;
+      d.querySelector(".txt").textContent = lang === "es" ? esText(s) : s.text;
+      box.appendChild(d);
+    });
+  }
+
+  function refresh(){
+    var codes = myCodes();
+    if (!codes.length) return;
+    fetch("/api/status?codes=" + encodeURIComponent(codes.join(",")))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var order = {};
+        codes.forEach(function(c,i){ order[c] = i; });
+        lastStatuses = j.statuses.sort(function(a,b){ return order[a.short_code] - order[b.short_code]; });
+        render(lastStatuses);
+      })
+      .catch(function(){});
+  }
+
+  if (load("rn_lang") === "es" || (!load("rn_lang") && /^es/i.test(navigator.language || ""))) { lang = "es"; applyLang(); }
+  refresh();
+  setInterval(refresh, 10000);
+})();
+</script>
+</body>
+</html>

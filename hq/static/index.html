@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RescueNet HQ</title>
+<link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+<header>
+  <div class="brand"><span class="dot"></span> RescueNet HQ</div>
+  <div class="stats" id="stats"></div>
+  <div class="flags" id="flags"></div>
+</header>
+<div class="layout">
+  <section class="mapwrap">
+    <div id="map"></div>
+    <div class="areas" id="areas"></div>
+  </section>
+  <aside>
+    <div class="filters">
+      <label><input type="checkbox" id="showClosed"> Show closed</label>
+      <label><input type="checkbox" id="sound" checked> Sound on new critical</label>
+    </div>
+    <div id="list"><p class="empty">Waiting for SOS from beacons…</p></div>
+  </aside>
+</div>
+
+<dialog id="assignDlg">
+  <form method="dialog" id="assignForm">
+    <h3>Assign team <span id="assignCode"></span></h3>
+    <label>Team <input name="team" value="Engine 23" required maxlength="60"></label>
+    <label>ETA (minutes) <input name="eta" type="number" min="0" max="1440" value="15"></label>
+    <menu><button value="cancel" formnovalidate>Cancel</button><button value="ok" class="primary">Assign</button></menu>
+  </form>
+</dialog>
+
+<script src="/static/vendor/leaflet/leaflet.js"></script>
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

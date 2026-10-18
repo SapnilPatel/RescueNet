@@ -1,0 +1,30 @@
+# Render Blueprint: HQ on the free tier.
+# Free instances sleep after ~15 min idle (first request takes ~30-60 s) and the
+# SQLite file resets on every deploy/restart. Hit /api/v1/health before the demo.
+services:
+  - type: web
+    name: rescuenet-hq
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn hq.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: AUTO_CALL
+        value: critical
+      - key: BEACON_KEY
+        sync: false
+      - key: DISPATCH_TOKEN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: RETELL_API_KEY
+        sync: false
+      - key: RETELL_FROM_NUMBER
+        sync: false
+      - key: RETELL_TO_NUMBER
+        sync: false
+      - key: RETELL_AGENT_ID
+        sync: false
