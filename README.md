@@ -8,7 +8,7 @@ When towers go down (Helene 2024: 74% of cell sites offline in affected NC count
 victim's phone ──Wi-Fi "SOS-HELP"──▶ beacon (Android/Termux, Flask + SQLite)
  (any browser,                         │ store-and-forward, most urgent first
   no app, no internet)                 ▼ when it reaches signal
-                                     HQ (FastAPI) ──▶ map + AI triage + Retell call
+                                     HQ (FastAPI) ──▶ map + rule triage + Retell call
                                        │
 victim sees "Help is on the way" ◀─────┘ dispatcher assigns team + ETA
 ```
@@ -17,7 +17,7 @@ victim sees "Help is on the way" ◀─────┘ dispatcher assigns team +
 | Path | What |
 |---|---|
 | `beacon/` | Flask SOS page (inline HTML, works offline, EN/ES), SQLite outbox, uploader loop, captive-portal probe routes |
-| `hq/` | FastAPI API + Leaflet dashboard (bundled, no CDN), rule triage + optional Claude enrichment, Retell outbound calls |
+| `hq/` | FastAPI API + Leaflet dashboard (bundled, no CDN), rule-based triage (English + Spanish keywords), Retell outbound calls; optional Claude enrichment exists but is off |
 | `sim/` | City-scale delivery simulation → `sim/out/delivery_vs_adoption.png` |
 | `tests/` | End-to-end tests (real HQ server + beacon) |
 | `docs/` | Concept, demo plan, research, runbooks |
@@ -54,6 +54,6 @@ Everything works without API keys: triage falls back to rules, and the dashboard
 Delivery states on the beacon: `saved_on_beacon` → `uploaded` → `hq_confirmed`. The victim only sees "Delivered" after HQ acks.
 
 ## Rules we hold ourselves to
-- AI triage can raise severity, never lower it, and never blocks an SOS.
+- Triage never blocks an SOS. (If the optional Claude step is ever turned on, it can raise severity but never lower it.)
 - The SOS page has zero external assets.
 - Secrets live only in env vars / `.env`.

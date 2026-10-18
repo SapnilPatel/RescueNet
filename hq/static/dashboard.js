@@ -24,7 +24,7 @@
     config = c;
     if (!fitted) map.setView(c.map_center, 15);
     var flags = document.getElementById("flags");
-    [["Claude triage", c.claude_enabled], ["Retell calls", c.retell_enabled], ["Auto-call: " + c.auto_call, c.retell_enabled && c.auto_call !== "off"]]
+    [[c.claude_enabled ? "Rules + Claude triage" : "Rule triage", true], ["Retell calls", c.retell_enabled], ["Auto-call: " + c.auto_call, c.retell_enabled && c.auto_call !== "off"]]
       .forEach(function (f) { flags.appendChild(el("span", "flag" + (f[1] ? " on" : ""), f[0])); });
     if (c.dispatch_token_required && !token) {
       token = prompt("Dispatcher token") || "";

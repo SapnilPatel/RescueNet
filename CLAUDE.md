@@ -12,7 +12,7 @@ Team RescueNet, **Dual-Use Hackathon @ USC Viterbi** (LA Tech Week, Oct 16–18,
 - **Civilian framing only** — no defense / marine / military projects or funding (international student on team).
 - Say "you don't need our app to be rescued", never just "no app needed".
 - Never claim an SOS is delivered before the HQ ack (`saved_on_beacon` → `uploaded` → `hq_confirmed`).
-- AI triage may raise severity, never lower it; AI never blocks an SOS.
+- **Team decision (Sat Oct 17): no Anthropic key — triage is rule-based.** Call it "rule-based triage" in the pitch, poster and Devpost, never "AI triage". The optional Claude code stays in `hq/triage.py` but is off. If it is ever enabled, it may only raise severity and never blocks an SOS.
 - The SOS page must work with zero internet: inline HTML/CSS/JS, no CDNs. Dashboard bundles Leaflet locally.
 - Secrets only in env vars / local `.env` — never commit them.
 - Lead with Maui 2023 / Helene 2024 outage examples, not the LA 2025 fires.

@@ -13,7 +13,7 @@ Every push to `main` redeploys it automatically (and wipes the SQLite data).
 1. Push the repo to GitHub.
 2. Render dashboard → **New → Blueprint** → pick the repo. Render reads `render.yaml` and creates `rescuenet-hq`.
 3. Fill the secret env vars it asks for (all optional):
-   - `ANTHROPIC_API_KEY` — Claude triage summaries/translation (rules work without it)
+   - `ANTHROPIC_API_KEY` — not used (team chose rule-based triage); leave unset
    - `RETELL_API_KEY`, `RETELL_FROM_NUMBER`, `RETELL_TO_NUMBER` (iPhone 2, E.164 `+1...`), `RETELL_AGENT_ID`
    - `BEACON_KEY` — shared secret; put the same value in the beacon's `.env`
    - `DISPATCH_TOKEN` — protects dashboard buttons; open the dashboard once as `https://rescuenet-r90o.onrender.com/?token=<value>`

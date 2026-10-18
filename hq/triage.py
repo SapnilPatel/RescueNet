@@ -47,7 +47,7 @@ def rule_triage(sos):
     score = BASE.get(status, 40)
     flags = []
     if status != "safe":
-        score += min(injured, 4) * 4
+        score += min(injured, 4) * 5  # trapped (80) + any injured -> critical (85)
         if "oxygen" in needs:
             score += 15
             flags.append("oxygen/medical device")
